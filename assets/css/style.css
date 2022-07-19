@@ -1,0 +1,11 @@
+.jumbotron {
+    background-image: linear-gradient(to right,green, yellow, blue);
+}
+.border-1 {
+    border-bottom: 3px black solid;
+    
+}
+.border-2 {
+    border: 1px black solid;
+    
+}
