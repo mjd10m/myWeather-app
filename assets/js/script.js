@@ -14,6 +14,11 @@ function formSubmitHandler(event) {
     cityInputEl.value = ""
 }
 
+function saveCityBtnHandler() {
+    var citySelected = this.innerHTML
+    getWeatherData(citySelected)
+}
+
 function formCitySelectHandler() {
     var citySelected = this.innerHTML;
     console.log(citySelected);
@@ -98,13 +103,14 @@ function getWeatherData(citySelected) {
                         response.json().then(function(data) {
                             console.log(data);
                             var baseIconEl = "<img src='http://openweathermap.org/img/wn/@2x.png'/>"
-                            var weatherIcon = getweatherIconURL(baseIconEl, 43, data.current.weather[0].icon)
+                            var weatherIcon = spliceInText(baseIconEl, 43, data.current.weather[0].icon)
+                            var uvSpan = uvSpanCreate(data.current.uvi)
                             var uTime = new Date(data.current.dt * 1000)
                             document.querySelector("#city-name").innerHTML = citySelected + " " + (uTime.getMonth() + 1) + "/" + uTime.getDate() + "/" + uTime.getFullYear() + weatherIcon
                             document.querySelector("#temp").innerHTML = "Temp: " + data.current.temp + " °F";
                             document.querySelector("#wind").innerHTML = "Wind: " + data.current.wind_speed + " Mph";
                             document.querySelector("#humid").innerHTML = "Humidity: " + data.current.humidity + "%";
-                            document.querySelector("#uvi").innerHTML = "UV-Index: " + data.current.uvi;
+                            document.querySelector("#uvi").innerHTML = "UV-Index: " + uvSpan;
                             while (document.querySelector("#forecast").firstChild) {
                                 document.querySelector("#forecast").removeChild(document.querySelector("#forecast").lastChild)
                             }
@@ -118,7 +124,7 @@ function getWeatherData(citySelected) {
                                 forecastContainerEl.appendChild(forecastDateEl)
                                 var forecastIconEl = document.createElement("img");
                                 var baseIconURL ="http://openweathermap.org/img/wn/@2x.png"
-                                forecastIconEl.src = getweatherIconURL(baseIconURL, 33, data.daily[i].weather[0].icon)
+                                forecastIconEl.src = spliceInText(baseIconURL, 33, data.daily[i].weather[0].icon)
                                 forecastIconEl.classList = "mx-auto d-block"
                                 forecastContainerEl.appendChild(forecastIconEl)
                                 var forecastTempEl = document.createElement("div");
@@ -156,9 +162,25 @@ function getWeatherData(citySelected) {
     currentWeatherContainer.classList.remove("d-none")
 }
 
-function getweatherIconURL(str, index, stringToAdd) {
-return str.substring(0, index) + stringToAdd + str.substring(index, str.length);
+function uvSpanCreate(uvi) {
+    debugger;
+    span = "<span class=' p-1'></span>"
+    if(uvi <= 2) {
+        background = "bg-success"
+    } else if (uvi > 2 && uvi < 6){
+        background = "bg-warning"
+    } else {
+        background = "bg-danger"
+    }
+
+    uviSpan = spliceInText(span, 13, background)
+    uviSpanComplete = spliceInText(uviSpan, (19 + background.length), uvi)
+    return uviSpanComplete
 }
 
+function spliceInText(str, index, stringToAdd) {
+return str.substring(0, index) + stringToAdd + str.substring(index, str.length);
+}
+$("#saved-city-list").on("click", "#citySaved-btn", saveCityBtnHandler )
 $("#modal-city-display").on("click", "#city-btn", formCitySelectHandler)
 userFormEl.addEventListener("submit", formSubmitHandler)
