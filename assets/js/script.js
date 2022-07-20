@@ -60,19 +60,50 @@ $("#modal-city-display").on("click", "#city-btn", function() {
                 console.log(data);
                 var lat = data[0].lat
                 var long = data[0].lon
-                var weatherApiURL = "https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + long + "&exclude=hourly,daily,minutely,alerts&units=imperial&appid=" + apiKey;
+                var weatherApiURL = "https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + long + "&exclude=hourly,minutely,alerts&units=imperial&appid=" + apiKey;
                 fetch(weatherApiURL).then(function(response) {
                     if (response.ok) {
                         response.json().then(function(data) {
                             console.log(data);
-                            var baseIconURL = "<img src='http://openweathermap.org/img/wn/@2x.png'/>"
-                            var weatherIcon = getweatherIconURL(baseIconURL, 43, data.current.weather[0].icon)
+                            var baseIconEl = "<img src='http://openweathermap.org/img/wn/@2x.png'/>"
+                            var weatherIcon = getweatherIconURL(baseIconEl, 43, data.current.weather[0].icon)
                             var uTime = new Date(data.current.dt * 1000)
                             document.querySelector("#city-name").innerHTML = citySelected + " " + (uTime.getMonth() + 1) + "/" + uTime.getDate() + "/" + uTime.getFullYear() + weatherIcon
                             document.querySelector("#temp").innerHTML = "Temp: " + data.current.temp + " °F";
                             document.querySelector("#wind").innerHTML = "Wind: " + data.current.wind_speed + " Mph";
                             document.querySelector("#humid").innerHTML = "Humidity: " + data.current.humidity + "%";
                             document.querySelector("#uvi").innerHTML = "UV-Index: " + data.current.uvi;
+                            while (document.querySelector("#forecast").firstChild) {
+                                document.querySelector("#forecast").removeChild(document.querySelector("#forecast").lastChild)
+                            }
+                                for (i=1; i < 6; i++) {
+                                var uTime = new Date(data.daily[i].dt * 1000)
+                                var forecastContainerEl = document.createElement("div");
+                                forecastContainerEl.classList = "col-2 border-2 bg-secondary text-white"
+                                var forecastDateEl = document.createElement("h4");
+                                forecastDateEl.classList = "text-center m-0"
+                                forecastDateEl.innerHTML = (uTime.getMonth() + 1) + "/" + uTime.getDate() + "/" + uTime.getFullYear()
+                                forecastContainerEl.appendChild(forecastDateEl)
+                                var forecastIconEl = document.createElement("img");
+                                var baseIconURL ="http://openweathermap.org/img/wn/@2x.png"
+                                forecastIconEl.src = getweatherIconURL(baseIconURL, 33, data.daily[i].weather[0].icon)
+                                forecastIconEl.classList = "mx-auto d-block"
+                                forecastContainerEl.appendChild(forecastIconEl)
+                                var forecastTempEl = document.createElement("div");
+                                forecastTempEl.classList = "mb-2"
+                                forecastTempEl.innerHTML = "Temp: " + data.daily[i].temp.day + " °F";
+                                forecastContainerEl.appendChild(forecastTempEl)
+                                var forecastWindEL = document.createElement("div");
+                                forecastWindEL.classList = "mb-2"
+                                forecastWindEL.innerHTML = "Wind: " + data.daily[i].wind_speed + " Mph";
+                                forecastContainerEl.appendChild(forecastWindEL)
+                                var forecastHumidEL = document.createElement("div");
+                                forecastHumidEL.classList = "mb-2"
+                                forecastHumidEL.innerHTML = "Humidity: " + data.daily[i].humidity + "%";
+                                forecastContainerEl.appendChild(forecastHumidEL)
+                                document.querySelector("#forecast").appendChild(forecastContainerEl)
+                            }
+
                         });
                     } else {
                         alert("Error: City Not Found");
@@ -81,7 +112,6 @@ $("#modal-city-display").on("click", "#city-btn", function() {
                 .catch(function(error) {
                     alert("Unable to connect to Open Weather API");
                 });
-                var weatherApiURL = "https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + long + "&exclude=hourly,daily,minutely,alerts&units=imperial&appid=" + apiKey;
             });
         } else {
             alert("Error: City Not Found");
