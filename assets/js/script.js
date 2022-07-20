@@ -1,13 +1,27 @@
 const apiKey = "1455541f84830ff59fc67883bee93219";
 var cityInputEl = document.querySelector("#citysearch");
 var userFormEl = document.querySelector("#user-form");
-var modalBodyEl = document.querySelector("#modal-city-display")
+var modalBodyEl = document.querySelector("#modal-city-display")  /*why # needed sometimes but not others*/
 var savedCitiesEl = document.querySelector("#saved-city-list")
+const forecastTitleEl = document.getElementById('forecast-title')
+const currentWeatherContainer = document.getElementById("current")
+var storedCities = []
+
 function formSubmitHandler(event) {
     event.preventDefault();
     var city = cityInputEl.value.trim();
     getGeoLocation(city);
+    cityInputEl.value = ""
+}
 
+function formCitySelectHandler() {
+    var citySelected = this.innerHTML;
+    console.log(citySelected);
+    storedCities.push(citySelected)
+    saveCityArray(storedCities);
+    historicalCities(storedCities);
+    $('#modal-city-select').modal("hide");
+    getWeatherData(citySelected) 
 }
 
 function getGeoLocation(city) {
@@ -21,9 +35,9 @@ function getGeoLocation(city) {
                     modalBodyEl.removeChild(modalBodyEl.lastChild)
                 }
                 for (i = 0; i < data.length; i++ ) {   
-                var returnedCity = data[i].name
-                var returnedState = data[i].state
-                var returnedCountry = data[i].country
+                var returnedCity = handleUndefines(data[i].name)
+                var returnedState = handleUndefines(data[i].state)
+                var returnedCountry = handleUndefines(data[i].country)
                 console.log(returnedCity +", "+ returnedState + ", " + returnedCountry);
                 var cityEl = document.createElement("btn");
                 cityEl.id = "city-btn"
@@ -43,16 +57,34 @@ function getGeoLocation(city) {
     });
 };
 
-$("#modal-city-display").on("click", "#city-btn", function() {
-    var citySelected = this.innerHTML;
-    console.log(citySelected);
-    var citySavedEl = document.createElement("btn");
-    citySavedEl.id = "citySaved-btn"
-    citySavedEl.classList = "col-12 btn btn-primary my-1";
-    citySavedEl.type = "button"
-    citySavedEl.innerHTML = citySelected;
-    savedCitiesEl.appendChild(citySavedEl);
-    $('#modal-city-select').modal("hide"); 
+function handleUndefines(text) {
+    if (text === undefined){
+        text = ''
+    } else {
+        text = text
+    }
+    return text
+}
+
+function historicalCities(storedCities) {
+    while (savedCitiesEl.firstChild) {
+        savedCitiesEl.removeChild(savedCitiesEl.lastChild)
+    }
+    for (i=storedCities.length - 1; i >= 0; i--) {
+        var citySavedEl = document.createElement("btn");
+        citySavedEl.id = "citySaved-btn"
+        citySavedEl.classList = "col-12 btn btn-primary my-1";
+        citySavedEl.type = "button"
+        citySavedEl.innerHTML = storedCities[i];
+        savedCitiesEl.appendChild(citySavedEl);
+    }
+}
+
+function saveCityArray(storedCities) {
+    localStorage.setItem("cities", JSON.stringify(storedCities))
+}
+
+function getWeatherData(citySelected) {
     var geoApiURL = "https://api.openweathermap.org/geo/1.0/direct?q=" + citySelected + "&limit=5&appid=" + apiKey;
     fetch(geoApiURL).then(function(response) {
         if (response.ok) {
@@ -120,12 +152,13 @@ $("#modal-city-display").on("click", "#city-btn", function() {
     .catch(function(error) {
         alert("Unable to connect to Open Weather API");
     });
-            
-
-})
+    forecastTitleEl.classList.remove("d-none")
+    currentWeatherContainer.classList.remove("d-none")
+}
 
 function getweatherIconURL(str, index, stringToAdd) {
 return str.substring(0, index) + stringToAdd + str.substring(index, str.length);
 }
 
+$("#modal-city-display").on("click", "#city-btn", formCitySelectHandler)
 userFormEl.addEventListener("submit", formSubmitHandler)
