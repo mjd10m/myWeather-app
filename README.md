@@ -10,9 +10,9 @@ JavaScript
 Jquery
 
 ## Website Snapshot
- ![](assets/images/first-load.png.png)
- ![](assets/images/weather-data-displayed.png.png)
- ![](assets/images/saved-data-load.png.png)
+ ![](assets/images/first-load.png)
+ ![](assets/images/weather-data-displayed.png)
+ ![](assets/images/saved-data-load.png)
 
 ## Link to Web Page
 https://mjd10m.github.io/myWeather-app/
