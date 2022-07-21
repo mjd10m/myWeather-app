@@ -1,40 +1,42 @@
 const apiKey = "1455541f84830ff59fc67883bee93219";
 var cityInputEl = document.querySelector("#citysearch");
 var userFormEl = document.querySelector("#user-form");
-var modalBodyEl = document.querySelector("#modal-city-display")  /*why # needed sometimes but not others*/
+var modalBodyEl = document.querySelector("#modal-city-display")  
 var savedCitiesEl = document.querySelector("#saved-city-list")
-const forecastTitleEl = document.getElementById('forecast-title')
-const currentWeatherContainer = document.getElementById("current")
+const forecastTitleEl = document.querySelector('#forecast-title')
+const currentWeatherContainer = document.querySelector("#current")
 var storedCities = []
 
+//handles when the search button is clicked
 function formSubmitHandler(event) {
     event.preventDefault();
     var city = cityInputEl.value.trim();
     getGeoLocation(city);
     cityInputEl.value = ""
 }
-
+//handles when the button of a previously searched city is clicked
 function saveCityBtnHandler() {
     var citySelected = this.innerHTML
     getWeatherData(citySelected)
 }
-
+//handles the city selected from the modal
 function formCitySelectHandler() {
     var citySelected = this.innerHTML;
-    console.log(citySelected);
     storedCities.push(citySelected)
+    if(storedCities.length > 7) {
+        storedCities = storedCities.splice(1,7)
+    }
     saveCityArray(storedCities);
     historicalCities(storedCities);
     $('#modal-city-select').modal("hide");
     getWeatherData(citySelected) 
 }
-
+//makes an api call to get up to 5 cities that match the searh input 
 function getGeoLocation(city) {
     var geoApiURL = "https://api.openweathermap.org/geo/1.0/direct?q=" + city + "&limit=5&appid=" + apiKey;
     fetch(geoApiURL).then(function(response) {
         if (response.ok) {
             response.json().then(function(data) {
-                console.log(data);
 
                 while (modalBodyEl.firstChild) {
                     modalBodyEl.removeChild(modalBodyEl.lastChild)
@@ -43,7 +45,6 @@ function getGeoLocation(city) {
                 var returnedCity = handleUndefines(data[i].name)
                 var returnedState = handleUndefines(data[i].state)
                 var returnedCountry = handleUndefines(data[i].country)
-                console.log(returnedCity +", "+ returnedState + ", " + returnedCountry);
                 var cityEl = document.createElement("btn");
                 cityEl.id = "city-btn"
                 cityEl.classList = "btn btn-primary col-12 mb-2";
@@ -61,7 +62,7 @@ function getGeoLocation(city) {
         alert("Unable to connect to Open Weather API");
     });
 };
-
+//replaces an undefined values with a blank
 function handleUndefines(text) {
     if (text === undefined){
         text = ''
@@ -70,7 +71,7 @@ function handleUndefines(text) {
     }
     return text
 }
-
+//creates the previous searched cities as a button and displays below the search bar
 function historicalCities(storedCities) {
     while (savedCitiesEl.firstChild) {
         savedCitiesEl.removeChild(savedCitiesEl.lastChild)
@@ -84,25 +85,23 @@ function historicalCities(storedCities) {
         savedCitiesEl.appendChild(citySavedEl);
     }
 }
-
+//saves the array of previously search cities to local storage
 function saveCityArray(storedCities) {
     localStorage.setItem("cities", JSON.stringify(storedCities))
 }
-
+//gets the weather information and adds it to the page
 function getWeatherData(citySelected) {
     var geoApiURL = "https://api.openweathermap.org/geo/1.0/direct?q=" + citySelected + "&limit=5&appid=" + apiKey;
     fetch(geoApiURL).then(function(response) {
         if (response.ok) {
             response.json().then(function(data) {
-                console.log(data);
                 var lat = data[0].lat
                 var long = data[0].lon
                 var weatherApiURL = "https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + long + "&exclude=hourly,minutely,alerts&units=imperial&appid=" + apiKey;
                 fetch(weatherApiURL).then(function(response) {
                     if (response.ok) {
                         response.json().then(function(data) {
-                            console.log(data);
-                            var baseIconEl = "<img src='http://openweathermap.org/img/wn/@2x.png'/>"
+                            var baseIconEl = "<img src='http://openweathermap.org/img/wn/@2x.png'/>" //how to escape default behavior
                             var weatherIcon = spliceInText(baseIconEl, 43, data.current.weather[0].icon)
                             var uvSpan = uvSpanCreate(data.current.uvi)
                             var uTime = new Date(data.current.dt * 1000)
@@ -114,7 +113,7 @@ function getWeatherData(citySelected) {
                             while (document.querySelector("#forecast").firstChild) {
                                 document.querySelector("#forecast").removeChild(document.querySelector("#forecast").lastChild)
                             }
-                                for (i=1; i < 6; i++) {
+                            for (i=1; i < 6; i++) {
                                 var uTime = new Date(data.daily[i].dt * 1000)
                                 var forecastContainerEl = document.createElement("div");
                                 forecastContainerEl.classList = "col-2 border-2 bg-secondary text-white"
@@ -140,8 +139,9 @@ function getWeatherData(citySelected) {
                                 forecastHumidEL.innerHTML = "Humidity: " + data.daily[i].humidity + "%";
                                 forecastContainerEl.appendChild(forecastHumidEL)
                                 document.querySelector("#forecast").appendChild(forecastContainerEl)
+                                forecastTitleEl.classList.remove("d-none")
+                                currentWeatherContainer.classList.remove("d-none")
                             }
-
                         });
                     } else {
                         alert("Error: City Not Found");
@@ -158,12 +158,9 @@ function getWeatherData(citySelected) {
     .catch(function(error) {
         alert("Unable to connect to Open Weather API");
     });
-    forecastTitleEl.classList.remove("d-none")
-    currentWeatherContainer.classList.remove("d-none")
 }
-
+//creates the span element as a text string
 function uvSpanCreate(uvi) {
-    debugger;
     span = "<span class=' p-1'></span>"
     if(uvi <= 2) {
         background = "bg-success"
@@ -177,10 +174,22 @@ function uvSpanCreate(uvi) {
     uviSpanComplete = spliceInText(uviSpan, (19 + background.length), uvi)
     return uviSpanComplete
 }
-
+//adds a text to a string 
 function spliceInText(str, index, stringToAdd) {
 return str.substring(0, index) + stringToAdd + str.substring(index, str.length);
 }
+//retrieves cities from local storage and adds to page
+function onPageLoad() {
+    storedCities = JSON.parse(localStorage.getItem("cities"));
+    if(storedCities === null) {
+        storedCities = []
+    } else {
+        historicalCities(storedCities)
+    }
+}
+//event listener to handle clicks on the page where needed
 $("#saved-city-list").on("click", "#citySaved-btn", saveCityBtnHandler )
 $("#modal-city-display").on("click", "#city-btn", formCitySelectHandler)
 userFormEl.addEventListener("submit", formSubmitHandler)
+//runs when page loads to get search history 
+onPageLoad()
